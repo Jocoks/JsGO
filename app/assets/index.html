@@ -1,0 +1,1262 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>JsGO</title>
+<style>
+/* ============ 设计变量（改主题只改这里） ============ */
+:root{
+  --bg:#FAF7F0;
+  --surface:#FFFDF8;
+  --surface-2:#F3EEE2;
+  --line:#EAE3D3;
+  --line-2:#DCD3BF;
+  --ink:#3B3A32;
+  --ink-2:#6D695C;
+  --ink-3:#9B9687;
+  --green:#A9C9A4;
+  --green-2:#8DB687;
+  --green-3:#5F7F59;
+  --green-soft:#E6F0E2;
+  --danger:#C08170;
+  --danger-soft:#F6E7E1;
+  --c1:#A9C9A4; --c1d:#3E5A3A;
+  --c2:#E6D6A6; --c2d:#6B5B2E;
+  --c3:#B7CDD7; --c3d:#37505A;
+  --c4:#E3C2BD; --c4d:#6E4440;
+  --c5:#C8BFD9; --c5d:#4B4260;
+  --c6:#EFC9A4; --c6d:#6E4E2A;
+  --c7:#B8D3C6; --c7d:#35564A;
+  --c8:#D5CEC1; --c8d:#554D40;
+  --r:16px; --r-sm:10px; --r-xs:8px;
+  --shadow:0 1px 2px rgba(80,70,50,.05),0 6px 20px rgba(80,70,50,.06);
+  --font:15px/1.65 -apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:var(--font);padding-bottom:env(safe-area-inset-bottom)}
+body.lock{overflow:hidden}
+
+/* ============ 顶栏 ============ */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px 10px;background:rgba(250,247,240,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.brand{font-size:19px;font-weight:600;letter-spacing:.2px;color:var(--green-3)}
+.brand .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green-2);margin-left:6px;vertical-align:2px}
+.tools{display:flex;gap:8px}
+.btn{appearance:none;border:1px solid transparent;background:var(--surface-2);color:var(--ink-2);font-size:14px;padding:8px 14px;border-radius:999px;line-height:1.2;font-family:inherit}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--green);color:#2E3B2A;font-weight:600}
+.btn.ghost{background:transparent;border-color:var(--line-2);color:var(--ink-2)}
+.btn.danger{background:var(--danger-soft);color:#8A4E3F}
+
+/* ============ 统计 / 搜索 / 面包屑 ============ */
+.stats{display:flex;gap:14px;padding:10px 18px 2px;color:var(--ink-3);font-size:13px;flex-wrap:wrap}
+.stats b{color:var(--ink-2);font-weight:600}
+.stats .bad{color:var(--danger)}
+.searchbar{display:flex;gap:8px;align-items:center;padding:10px 16px}
+.searchbar input[type=search]{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:10px 14px;font-size:14px;color:var(--ink);outline:none;font-family:inherit}
+.searchbar input[type=search]:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-soft)}
+.chip{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-3);white-space:nowrap}
+.chip input{accent-color:var(--green-2);width:16px;height:16px}
+.crumb{display:flex;align-items:center;gap:8px;padding:0 16px 8px}
+.crumb-t{flex:1;min-width:0;font-size:13px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tagbar{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 10px}
+.chip2{font-size:12px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-family:inherit}
+.chip2.on{background:var(--green-soft);border-color:var(--green-2);color:var(--green-3);font-weight:600}
+
+/* ============ 分类卡片 ============ */
+.cat{display:flex;align-items:center;gap:12px;margin:0 16px 10px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.cat-ic{flex:0 0 44px;width:44px;height:44px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600}
+.cat-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.cat-t{font-size:14px;font-weight:600;color:var(--ink);line-height:1.45}
+.cat-d{font-size:12.5px;color:var(--ink-3);line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.cat-m{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--ink-3)}
+.cat-m .num{color:var(--green-3);font-weight:600}
+.cat-arrow{flex:0 0 auto;color:var(--ink-3);font-size:20px;line-height:1;padding-left:2px}
+
+/* ============ 条目卡片 ============ */
+.item{display:flex;gap:10px;align-items:flex-start;margin:0 16px 10px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.item.sel{border-color:var(--green-2);background:var(--green-soft)}
+.item.bad{border-color:var(--danger)}
+.chk{padding-top:2px}
+.chk input{width:18px;height:18px;accent-color:var(--green-2)}
+.ibody{flex:1;min-width:0}
+.ihead{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--ink-3);margin-bottom:6px;flex-wrap:wrap}
+.no{font-weight:600;color:var(--ink-2)}
+.tag{background:var(--surface-2);border-radius:6px;padding:1px 7px;color:var(--ink-2)}
+.tag.bad{background:var(--danger-soft);color:#8A4E3F}
+.tag.sub{background:var(--green-soft);color:var(--green-3)}
+.is{font-size:12px;color:var(--ink-3);line-height:1.5;margin-bottom:5px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.is b{color:var(--ink-3);font-size:11px;margin-right:4px;font-weight:600}
+.iu,.ia{font-size:14px;color:var(--ink-2);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.5}
+.iu{margin-bottom:4px}
+.iu b,.ia b{color:var(--green-3);font-size:11px;margin-right:4px}
+.ierr{font-size:13px;color:var(--danger);margin:4px 0}
+.empty{margin:40px 20px;text-align:center;color:var(--ink-3);font-size:14px;line-height:2}
+.more{text-align:center;padding:8px 0 24px}
+
+/* ============ 全屏面板 ============ */
+.sheet{position:fixed;inset:0;z-index:40;background:var(--bg);display:flex;flex-direction:column;animation:slide .18s ease}
+@keyframes slide{from{transform:translateY(14px);opacity:.5}to{transform:none;opacity:1}}
+.sheet[hidden]{display:none}
+.sheet-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);background:var(--bg);flex-shrink:0}
+.sheet-title{flex:1;text-align:center;font-weight:600;font-size:16px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet-body{flex:1;overflow:auto;padding:16px;padding-bottom:calc(28px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+
+/* ============ 编辑 ============ */
+.msg{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:14px;box-shadow:var(--shadow)}
+.msgbar{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.msgbar select{appearance:none;border:1px solid var(--line-2);background:var(--surface-2);border-radius:var(--r-xs);padding:5px 10px;font-size:13px;color:var(--ink-2);font-family:inherit}
+.msgbar .len{flex:1;text-align:right;font-size:12px;color:var(--ink-3)}
+textarea{width:100%;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--bg);color:var(--ink);padding:10px 12px;font:14px/1.7 inherit;resize:none;outline:none;min-height:80px;overflow:hidden}
+textarea:focus{border-color:var(--green-2);box-shadow:0 0 0 3px var(--green-soft)}
+input[type=text],input[type=number],select{font-family:inherit;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--bg);color:var(--ink);padding:10px 12px;font-size:14px;outline:none;width:100%}
+input:focus,select:focus{border-color:var(--green-2);box-shadow:0 0 0 3px var(--green-soft)}
+.mini{border:0;background:transparent;color:var(--ink-3);font-size:12px;padding:4px 6px;font-family:inherit}
+.mini.danger{color:var(--danger)}
+.rowbtns{display:flex;gap:10px;margin-top:2px;flex-wrap:wrap}
+.sec{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-bottom:14px}
+.sec-t{font-size:13px;font-weight:600;color:var(--green-3);margin-bottom:8px}
+.sec .hint{font-size:12px;color:var(--ink-3);margin-top:6px;line-height:1.6}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.field label{font-size:12px;color:var(--ink-3)}
+.field:last-child{margin-bottom:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ============ 提示 ============ */
+#toast{position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);background:rgba(60,58,50,.92);color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:.2s;z-index:80;max-width:82vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%)}
+#toast.err{background:rgba(160,90,70,.95)}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">JsGO<span class="dot"></span></div>
+  <div class="tools">
+    <button class="btn ghost" data-act="import">导入</button>
+    <button class="btn ghost" data-act="export">保存文件</button>
+    <button class="btn primary" data-act="new">新建</button>
+  </div>
+</header>
+
+<div class="stats" id="stats"></div>
+
+<div class="searchbar">
+  <input type="search" id="q" placeholder="搜索提示词 / 标签 / 内容" autocomplete="off">
+  <label class="chip"><input type="checkbox" id="onlyErr"> 只看错误</label>
+  <button class="btn ghost" data-act="batch">批量</button>
+</div>
+
+<div class="crumb" id="crumb" hidden></div>
+<div class="tagbar" id="tagbar" hidden></div>
+
+<main id="list"></main>
+<div class="more" id="more"></div>
+
+<!-- 编辑面板 -->
+<section class="sheet" id="sheet-edit" hidden>
+  <header class="sheet-head">
+    <button class="btn ghost" data-act="close-sheet">返回</button>
+    <div class="sheet-title" id="edit-title">编辑</div>
+    <button class="btn primary" data-act="save-item">保存</button>
+  </header>
+  <div class="sheet-body" id="edit-body"></div>
+</section>
+
+<!-- 批量面板 -->
+<section class="sheet" id="sheet-batch" hidden>
+  <header class="sheet-head">
+    <button class="btn ghost" data-act="close-sheet">返回</button>
+    <div class="sheet-title">批量处理</div>
+    <button class="btn ghost" data-act="undo">撤销</button>
+  </header>
+  <div class="sheet-body">
+    <div class="sec">
+      <div class="sec-t">作用范围（不填 = 全部）</div>
+      <div class="field"><label>关键词</label><input type="text" id="b-q" placeholder="匹配 user 或 assistant 内容"></div>
+      <div class="grid2">
+        <div class="field"><label>role</label>
+          <select id="b-role"><option value="">全部</option><option value="user">user</option><option value="assistant">assistant</option><option value="system">system</option></select>
+        </div>
+        <div class="field"><label>最少字数</label><input type="number" id="b-min" min="0" placeholder="0"></div>
+      </div>
+      <label class="chip" style="margin-top:2px"><input type="checkbox" id="b-err"> 只看错误行</label>
+    </div>
+
+    <div class="sec">
+      <div class="sec-t">查找替换</div>
+      <div class="field"><label>查找</label><input type="text" id="b-find" placeholder="要替换的文本"></div>
+      <div class="field"><label>替换为</label><input type="text" id="b-repl" placeholder="留空 = 删除"></div>
+      <div class="field"><label>字段范围</label>
+        <select id="b-scope"><option value="all">全部字段</option><option value="user">仅 user</option><option value="assistant">仅 assistant</option></select>
+      </div>
+      <button class="btn primary" data-act="run" data-op="replace">执行替换</button>
+    </div>
+
+    <div class="sec">
+      <div class="sec-t">统一 user 文本</div>
+      <div class="field"><label>新的 user 内容</label><input type="text" id="b-user" placeholder="把所有匹配条目的第一条 user 改成这个"></div>
+      <button class="btn" data-act="run" data-op="rewrite">执行重写</button>
+    </div>
+
+    <div class="sec">
+      <div class="sec-t">子分类标签</div>
+      <div class="field"><label>统一标签</label><input type="text" id="b-tag" placeholder="填了就写入 meta.sub，留空 = 清除"></div>
+      <button class="btn" data-act="run" data-op="tag">执行打标签</button>
+    </div>
+
+    <div class="sec">
+      <div class="sec-t">其它批量操作</div>
+      <div class="rowbtns">
+        <button class="btn" data-act="run" data-op="trim">去首尾空白</button>
+        <button class="btn" data-act="run" data-op="dedupe">按内容去重</button>
+        <button class="btn danger" data-act="run" data-op="remove">删除匹配条目</button>
+      </div>
+      <div class="hint">所有操作只作用于上面的范围；执行前会再确认，并保留一次撤销。</div>
+    </div>
+  </div>
+</section>
+
+<input type="file" id="filepick" accept=".jsonl,.json,text/plain" hidden>
+<div id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ================= 配置层 ================= */
+var CONFIG = {
+  PAGE: 60,
+  TARGET: 50,
+  MIN_TARGET: 15
+};
+
+/* ================= 工具层 ================= */
+var $ = function(s, r){ return (r||document).querySelector(s); };
+var $$ = function(s, r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); };
+var uid = function(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); };
+var esc = function(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+};
+var toastTimer = null;
+function toast(msg, ok){
+  var el = $('#toast');
+  el.textContent = msg;
+  el.className = 'show' + (ok === false ? ' err' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.className = ''; }, 2200);
+}
+function debounce(fn, ms){
+  var t = null;
+  return function(){ var a = arguments, self = this; clearTimeout(t); t = setTimeout(function(){ fn.apply(self, a); }, ms); };
+}
+/* 输入框随内容长高；隐藏状态下 scrollHeight 为 0，此时不写死高度 */
+function autoGrow(el){
+  if (!el) return;
+  el.style.height = 'auto';
+  var h = el.scrollHeight;
+  if (!h) return;
+  var cap = Math.round(window.innerHeight * 0.7);
+  var target = Math.max(h + 2, 80);
+  if (target > cap){
+    el.style.height = cap + 'px';
+    el.style.overflowY = 'auto';
+  } else {
+    el.style.height = target + 'px';
+    el.style.overflowY = 'hidden';
+  }
+}
+function growAll(){
+  $$('#edit-body textarea').forEach(autoGrow);
+}
+/* 大文本分块过桥，避免桥参数超限 */
+function pushText(text, begin, append, commit){
+  begin();
+  var size = 65536;
+  for (var i = 0; i < text.length; i += size){
+    append(text.substring(i, Math.min(text.length, i + size)));
+  }
+  commit();
+}
+function pullChunks(lenFn, chunkFn){
+  var n = 0;
+  try { n = lenFn() | 0; } catch (e) { return null; }
+  if (!n) return null;
+  var parts = [], size = 65536;
+  for (var i = 0; i < n; i += size){
+    parts.push(String(chunkFn(i, Math.min(n, i + size))));
+  }
+  return parts.join('');
+}
+function pullStore(){
+  var J = window.JsGO;
+  if (!J || !J.storeLength) return null;
+  return pullChunks(function(){ return J.storeLength(); }, function(a, b){ return J.storeChunk(a, b); });
+}
+function pullOpen(){
+  var J = window.JsGO;
+  if (!J || !J.openLength) return null;
+  return pullChunks(function(){ return J.openLength(); }, function(a, b){ return J.openChunk(a, b); });
+}
+
+/* ================= 数据层 ================= */
+var Jsonl = {
+  parse: function(text){
+    var out = [];
+    var lines = String(text).split(/\r?\n/);
+    for (var i = 0; i < lines.length; i++){
+      var raw = lines[i];
+      var s = raw.trim();
+      if (!s) continue;
+      try {
+        var obj = JSON.parse(s);
+        var v = Jsonl.validate(obj);
+        out.push({ id: uid(), obj: obj, raw: raw, line: i + 1, error: v.ok ? null : v.errs.join('；') });
+      } catch (e) {
+        out.push({ id: uid(), obj: null, raw: raw, line: i + 1, error: 'JSON 解析失败：' + e.message });
+      }
+    }
+    return out;
+  },
+  validate: function(obj){
+    var errs = [];
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)){
+      return { ok: false, errs: ['这一行不是 JSON 对象'] };
+    }
+    if (!Array.isArray(obj.messages)){
+      errs.push('缺少 messages 数组');
+    } else {
+      if (!obj.messages.length) errs.push('messages 为空');
+      obj.messages.forEach(function(m, i){
+        if (!m || typeof m !== 'object' || Array.isArray(m)){ errs.push('messages[' + i + '] 不是对象'); return; }
+        if (['user','assistant','system'].indexOf(m.role) < 0) errs.push('messages[' + i + '].role 非法');
+        if (typeof m.content !== 'string') errs.push('messages[' + i + '].content 不是字符串');
+      });
+    }
+    return { ok: errs.length === 0, errs: errs };
+  },
+  // 编号统一按字符串处理，去掉首尾空白
+  normId: function(v){
+    if (v === undefined || v === null) return '';
+    return String(v).trim();
+  },
+  // id 放在最前，messages 第二，其余字段顺序不变
+  order: function(obj){
+    if (!obj || typeof obj !== 'object') return obj;
+    var out = {};
+    var id = Jsonl.normId(obj.id);
+    if (id) out.id = id;
+    if (obj.messages !== undefined) out.messages = obj.messages;
+    Object.keys(obj).forEach(function(k){
+      if (k !== 'id' && k !== 'messages') out[k] = obj[k];
+    });
+    return out;
+  },
+  idOf: function(it){
+    return it && it.obj ? Jsonl.normId(it.obj.id) : '';
+  },
+  idExists: function(items, id, exceptInternalId){
+    var s = Jsonl.normId(id);
+    if (!s) return false;
+    for (var i = 0; i < items.length; i++){
+      var it = items[i];
+      if (!it.obj || it.id === exceptInternalId) continue;
+      if (Jsonl.normId(it.obj.id) === s) return true;
+    }
+    return false;
+  },
+  stringify: function(items){
+    var lines = items.map(function(it){
+      if (it.obj) return JSON.stringify(Jsonl.order(it.obj));
+      return String(it.raw || '').trim();
+    }).filter(function(s){ return s !== ''; });
+    return lines.length ? lines.join('\n') + '\n' : '';
+  },
+  chars: function(obj){
+    var n = 0;
+    (obj && obj.messages || []).forEach(function(m){ n += String(m && m.content || '').length; });
+    return n;
+  },
+  summary: function(it){
+    if (!it.obj) return { u: '', a: '' };
+    var ms = it.obj.messages || [];
+    var u = null, a = null, sy = null;
+    for (var i = 0; i < ms.length; i++){ if (!sy && ms[i].role === 'system') sy = ms[i]; }
+    for (var i = 0; i < ms.length; i++){ if (!u && ms[i].role === 'user') u = ms[i]; }
+    for (var j = ms.length - 1; j >= 0; j--){ if (!a && ms[j].role === 'assistant') a = ms[j]; }
+    return { s: sy ? String(sy.content) : '', u: u ? String(u.content) : '', a: a ? String(a.content) : '' };
+  },
+  searchText: function(it){
+    if (!it.obj) return String(it.raw || '').toLowerCase();
+    var head = Cats.key(it);
+    var tag = Cats.tag(it);
+    return (Jsonl.idOf(it) + '\n' + head + '\n' + tag + '\n' + (it.obj.messages || []).map(function(m){ return String(m.content || ''); }).join('\n')).toLowerCase();
+  }
+};
+
+/* ================= 分类层 =================
+   分类 = 第一条 system 消息（系统提示词）
+   没有 system 的条目归到「未设系统提示词」
+   子分类 = 条目的 meta.sub（标签）                     */
+var Cats = {
+  key: function(it){
+    if (!it.obj) return null;
+    var ms = it.obj.messages || [];
+    for (var i = 0; i < ms.length; i++){
+      if (ms[i].role === 'system') return String(ms[i].content || '').trim();
+    }
+    return '';
+  },
+  /* 卡片标题拆两段：head 是身份/模式名，rest 是后面的要求 */
+  parts: function(k){
+    if (k === '') return { head: '未设系统提示词', rest: '这些条目没有 system 消息' };
+    var s = String(k).replace(/\s+/g, ' ').trim();
+    if (!s) return { head: '空提示词', rest: '' };
+    var m = s.match(/^你是([^，。！？!?\s]{1,8})/);
+    if (m){
+      return { head: m[1], rest: s.slice(m[0].length).replace(/^[。！？，、\s]+/, '') };
+    }
+    var cut = s.search(/[。！？!?\n]/);
+    var head = cut > 0 ? s.slice(0, cut) : s.slice(0, 16);
+    if (head.length > 16) head = head.slice(0, 16);
+    var rest = cut > 0 ? s.slice(cut + 1).replace(/^[\s。！？!?]+/, '') : s.slice(head.length);
+    return { head: head, rest: rest };
+  },
+  label: function(k){ return Cats.parts(k).head; },
+  /* 卡片图标上的字：像头像一样给每个提示词一个字 */
+  mark: function(k){
+    if (k === '') return '·';
+    var s = String(k).replace(/^[\s「『“"'（(【\[#]+/, '');
+    var m = s.match(/你是([^，。！？!?\s]{1,6})/);
+    if (m) return m[1].charAt(0);
+    return s.charAt(0) || '文';
+  },
+  hue: function(k){
+    var h = 7, s = String(k);
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 9973;
+    return h % 8;
+  },
+  tag: function(it){
+    var m = it.obj && it.obj.meta;
+    if (m && typeof m === 'object' && !Array.isArray(m) && typeof m.sub === 'string') return m.sub.trim();
+    return '';
+  },
+  setTag: function(obj, tag){
+    if (!obj) return;
+    tag = String(tag || '').trim();
+    var m = obj.meta;
+    if (!m || typeof m !== 'object' || Array.isArray(m)) m = {};
+    if (tag) m.sub = tag; else delete m.sub;
+    if (Object.keys(m).length) obj.meta = m; else delete obj.meta;
+  },
+  build: function(items){
+    var map = {}, order = [];
+    items.forEach(function(it){
+      if (!it.obj) return;
+      var k = Cats.key(it);
+      if (!map.hasOwnProperty(k)){ map[k] = { key: k, count: 0, chars: 0, tags: {}, order: [] }; order.push(k); }
+      var c = map[k];
+      c.count++;
+      c.chars += Jsonl.chars(it.obj);
+      var t = Cats.tag(it);
+      if (t){
+        if (!c.tags[t]){ c.tags[t] = 0; c.order.push(t); }
+        c.tags[t]++;
+      }
+    });
+    return order.map(function(k){ return map[k]; });
+  }
+};
+
+/* ================= 状态层 ================= */
+var State = {
+  items: [],
+  view: 'cats',        // cats | tags | items
+  cat: null,           // 当前分类 key（system 提示词）
+  tag: null,           // 当前子标签：null=全部，''=未加标签
+  page: 1,
+  query: '',
+  onlyErr: false,
+  catsCache: [],
+  tagList: [],
+  editingId: null,
+  draft: null,
+  extraText: '',
+  tagText: '',
+  rawFix: '',
+  fixErr: '',
+  undo: null,
+  selected: {}
+};
+
+/* ================= 存储层 ================= */
+var Persist = {
+  timer: null,
+  save: function(){
+    clearTimeout(Persist.timer);
+    Persist.timer = setTimeout(function(){
+      var text;
+      try { text = JSON.stringify(State.items); } catch (e) { return; }
+      if (window.JsGO && window.JsGO.storeBegin){
+        try {
+          pushText(text,
+            function(){ window.JsGO.storeBegin(); },
+            function(s){ window.JsGO.storeAppend(s); },
+            function(){ window.JsGO.storeCommit(); });
+        } catch (e) {}
+      } else {
+        try { localStorage.setItem('jsgo_workspace', text); } catch (e) {}
+      }
+    }, 400);
+  }
+};
+
+/* ================= 操作层 ================= */
+var Ops = {
+  add: function(obj){
+    State.items.push({ id: uid(), obj: Jsonl.order(obj), raw: '', line: State.items.length + 1, error: null });
+    Persist.save(); render();
+  },
+  update: function(id, obj){
+    var it = State.items.filter(function(x){ return x.id === id; })[0];
+    if (!it) return;
+    it.obj = Jsonl.order(obj); it.raw = ''; it.error = null;
+    Persist.save(); render();
+  },
+  remove: function(id){
+    State.items = State.items.filter(function(x){ return x.id !== id; });
+    Persist.save(); render();
+  }
+};
+
+/* ================= 批量层 ================= */
+function batchScope(){
+  var q = ($('#b-q').value || '').trim().toLowerCase();
+  var role = $('#b-role').value;
+  var min = parseInt($('#b-min').value || '0', 10) || 0;
+  var onlyErr = $('#b-err').checked;
+  return State.items.filter(function(it){
+    if (onlyErr && !it.error) return false;
+    if (it.error) return role === '' && !q;
+    var ms = it.obj.messages || [];
+    if (role && !ms.some(function(m){ return m.role === role; })) return false;
+    if (min && Jsonl.chars(it.obj) < min) return false;
+    if (q){
+      var s = ms.map(function(m){ return String(m.content || ''); }).join('\n').toLowerCase();
+      if (s.indexOf(q) < 0) return false;
+    }
+    return true;
+  });
+}
+function snapshot(){
+  State.undo = JSON.parse(JSON.stringify(State.items));
+}
+var Batch = {
+  replace: function(){
+    var find = $('#b-find').value;
+    if (!find){ toast('查找内容为空', false); return; }
+    var repl = $('#b-repl').value;
+    var scope = $('#b-scope').value;
+    var list = batchScope().filter(function(it){ return it.obj; });
+    if (!list.length){ toast('没有匹配条目', false); return; }
+    if (!confirm('将修改 ' + list.length + ' 条，继续？')) return;
+    snapshot();
+    var changed = 0;
+    list.forEach(function(it){
+      var n = 0;
+      it.obj.messages.forEach(function(m){
+        if (scope !== 'all' && m.role !== scope) return;
+        var c = String(m.content || '');
+        var c2 = c.split(find).join(repl);
+        if (c2 !== c){ m.content = c2; n++; }
+      });
+      if (n) changed++;
+    });
+    Persist.save(); render();
+    toast('已修改 ' + changed + ' 条');
+  },
+  rewrite: function(){
+    var text = $('#b-user').value;
+    if (!text.trim()){ toast('请填写新的 user 文本', false); return; }
+    var list = batchScope().filter(function(it){ return it.obj; });
+    if (!list.length){ toast('没有匹配条目', false); return; }
+    if (!confirm('将把 ' + list.length + ' 条的第一条 user 改成统一文本，继续？')) return;
+    snapshot();
+    var n = 0;
+    list.forEach(function(it){
+      for (var i = 0; i < it.obj.messages.length; i++){
+        if (it.obj.messages[i].role === 'user'){ it.obj.messages[i].content = text; n++; break; }
+      }
+    });
+    Persist.save(); render();
+    toast('已重写 ' + n + ' 条');
+  },
+  tag: function(){
+    var tag = $('#b-tag').value;
+    var list = batchScope().filter(function(it){ return it.obj; });
+    if (!list.length){ toast('没有匹配条目', false); return; }
+    if (!confirm('将给 ' + list.length + ' 条打上标签「' + (tag.trim() || '清除') + '」，继续？')) return;
+    snapshot();
+    list.forEach(function(it){ Cats.setTag(it.obj, tag); });
+    Persist.save(); render();
+    toast('已处理 ' + list.length + ' 条');
+  },
+  trim: function(){
+    var list = batchScope().filter(function(it){ return it.obj; });
+    if (!list.length){ toast('没有匹配条目', false); return; }
+    snapshot();
+    var changed = 0;
+    list.forEach(function(it){
+      var before = JSON.stringify(it.obj);
+      it.obj.messages.forEach(function(m){ m.content = String(m.content || '').trim(); });
+      it.obj.messages = it.obj.messages.filter(function(m){ return m.content !== ''; });
+      if (JSON.stringify(it.obj) !== before) changed++;
+    });
+    var emptyIds = {};
+    State.items.forEach(function(it){
+      if (it.obj && (!it.obj.messages || !it.obj.messages.length)) emptyIds[it.id] = true;
+    });
+    var removed = Object.keys(emptyIds).length;
+    if (removed) State.items = State.items.filter(function(it){ return !emptyIds[it.id]; });
+    Persist.save(); render();
+    toast('已整理 ' + changed + ' 条' + (removed ? '，删除 ' + removed + ' 条空条目' : ''));
+  },
+  dedupe: function(){
+    var list = batchScope().filter(function(it){ return it.obj; });
+    if (list.length < 2){ toast('至少需要 2 条才能去重', false); return; }
+    snapshot();
+    var seen = {}, drop = {}, n = 0;
+    list.forEach(function(it){
+      var key = it.obj.messages.map(function(m){ return m.role + '\u0001' + String(m.content); }).join('\u0002');
+      if (seen[key]){ drop[it.id] = true; n++; }
+      else seen[key] = true;
+    });
+    if (n) State.items = State.items.filter(function(it){ return !drop[it.id]; });
+    Persist.save(); render();
+    toast('已去除 ' + n + ' 条重复');
+  },
+  remove: function(){
+    var list = batchScope();
+    if (!list.length){ toast('没有匹配条目', false); return; }
+    if (!confirm('将删除 ' + list.length + ' 条，可撤销一次，继续？')) return;
+    snapshot();
+    var ids = {};
+    list.forEach(function(it){ ids[it.id] = true; });
+    State.items = State.items.filter(function(it){ return !ids[it.id]; });
+    Persist.save(); render();
+    toast('已删除 ' + list.length + ' 条');
+  }
+};
+function undo(){
+  if (!State.undo){ toast('没有可撤销的操作', false); return; }
+  State.items = State.undo;
+  State.undo = null;
+  Persist.save(); render();
+  toast('已撤销');
+}
+
+/* ================= 渲染层 ================= */
+function fmtChars(n){
+  if (n < 10000) return n.toLocaleString() + ' 字';
+  if (n < 100000000) return (n / 10000).toFixed(n < 100000 ? 1 : 0).replace(/\.0$/, '') + ' 万字';
+  return (n / 100000000).toFixed(2).replace(/\.?0+$/, '') + ' 亿字';
+}
+function catItems(key){
+  if (key === null) return State.items.filter(function(it){ return !!it.obj; });
+  return State.items.filter(function(it){ return it.obj && Cats.key(it) === key; });
+}
+function filteredItems(){
+  var q = State.query;
+  return State.items.filter(function(it){
+    if (State.cat !== null && !(it.obj && Cats.key(it) === State.cat)) return false;
+    if (State.tag !== null && Cats.tag(it) !== State.tag) return false;
+    if (State.onlyErr && !it.error) return false;
+    if (!q) return true;
+    return Jsonl.searchText(it).indexOf(q) >= 0;
+  });
+}
+
+function renderStats(){
+  var ok = 0, bad = 0;
+  State.items.forEach(function(it){ if (!it.obj) bad++; else ok++; });
+  var parts = [];
+  if (State.view === 'cats'){
+    parts.push('<span><b>' + State.catsCache.length + '</b> 个分类</span>');
+    parts.push('<span><b>' + ok + '</b> 条</span>');
+  } else if (State.view === 'tags'){
+    var list = catItems(State.cat);
+    parts.push('<span><b>' + list.length + '</b> 条</span>');
+    parts.push('<span>' + fmtChars(list.reduce(function(n, it){ return n + Jsonl.chars(it.obj); }, 0)) + '</span>');
+  } else {
+    var l2 = filteredItems();
+    parts.push('<span><b>' + l2.length + '</b> 条</span>');
+    parts.push('<span>' + fmtChars(l2.reduce(function(n, it){ return n + Jsonl.chars(it.obj); }, 0)) + '</span>');
+  }
+  if (bad) parts.push('<span class="bad">' + bad + ' 条错误</span>');
+  if (Object.keys(State.selected).length) parts.push('<span><b>' + Object.keys(State.selected).length + '</b> 选中</span>');
+  $('#stats').innerHTML = parts.join('');
+}
+
+function catCardHTML(c, idx){
+  var i = Cats.hue(c.key);
+  var parts = Cats.parts(c.key);
+  var mark = Cats.mark(c.key);
+  var full = c.key === '' ? '这条没有 system 消息' : c.key;
+  var tags = c.order.slice(0, 4).map(function(t){
+    return '<span class="tag sub">' + esc(t) + ' ' + c.tags[t] + '</span>';
+  }).join('');
+  var more = c.order.length > 4 ? '<span class="tag">+' + (c.order.length - 4) + '</span>' : '';
+  return '<div class="cat" data-cat="' + idx + '" title="' + esc(full) + '">' +
+    '<div class="cat-ic" style="background:var(--c' + (i + 1) + ');color:var(--c' + (i + 1) + 'd)">' + esc(mark) + '</div>' +
+    '<div class="cat-main">' +
+      '<div class="cat-t">' + esc(parts.head) + '</div>' +
+      (parts.rest ? '<div class="cat-d">' + esc(parts.rest) + '</div>' : '') +
+      '<div class="cat-m"><span class="num">' + c.count + ' 条</span><span>·</span><span>' + fmtChars(c.chars) + '</span>' + tags + more + '</div>' +
+    '</div>' +
+    '<div class="cat-arrow">›</div>' +
+  '</div>';
+}
+
+function itemCardHTML(it){
+  var sel = !!State.selected[it.id];
+  if (it.error){
+    return '<div class="item bad' + (sel ? ' sel' : '') + '">' +
+      '<label class="chk"><input type="checkbox" data-sel="' + it.id + '"' + (sel ? ' checked' : '') + '></label>' +
+      '<div class="ibody" data-open="' + it.id + '">' +
+        '<div class="ihead"><span class="no">#' + it.line + '</span><span class="tag bad">解析失败</span></div>' +
+        '<div class="ierr">' + esc(it.error) + '</div>' +
+        '<div class="ia">' + esc(String(it.raw || '').slice(0, 160)) + '</div>' +
+      '</div></div>';
+  }
+  var s = Jsonl.summary(it);
+  var ms = it.obj.messages || [];
+  var tag = Cats.tag(it);
+  return '<div class="item' + (sel ? ' sel' : '') + '">' +
+    '<label class="chk"><input type="checkbox" data-sel="' + it.id + '"' + (sel ? ' checked' : '') + '></label>' +
+    '<div class="ibody" data-open="' + it.id + '">' +
+      '<div class="ihead"><span class="no">' + (Jsonl.idOf(it) ? esc(Jsonl.idOf(it)) : '#' + it.line) + '</span><span class="tag">' + ms.length + ' 条</span><span class="tag">' + Jsonl.chars(it.obj) + ' 字</span>' +
+      (tag ? '<span class="tag sub">' + esc(tag) + '</span>' : '') + '</div>' +
+      (s.s ? '<div class="is"><b>S</b>' + esc(s.s.slice(0, 120)) + '</div>' : '') +
+      (s.u ? '<div class="iu"><b>U</b>' + esc(s.u.slice(0, 100)) + '</div>' : '') +
+      (s.a ? '<div class="ia"><b>A</b>' + esc(s.a.slice(0, 100)) + '</div>' : '') +
+    '</div></div>';
+}
+
+function renderCats(){
+  $('#crumb').hidden = true;
+  $('#tagbar').hidden = true;
+  var cats = Cats.build(State.items);
+  State.catsCache = cats;
+  var q = State.query;
+  var shown = cats.filter(function(c){
+    if (!q) return true;
+    if (c.key.toLowerCase().indexOf(q) >= 0) return true;
+    return c.order.some(function(t){ return t.toLowerCase().indexOf(q) >= 0; });
+  });
+  var html = shown.map(catCardHTML).join('');
+  if (!html) html = '<div class="empty">' + (State.items.length ? '没有匹配的分类' : '还没有数据<br>点右上角「导入」打开 jsonl，或「新建」写一条') + '</div>';
+  $('#list').innerHTML = html;
+  var bad = State.items.filter(function(it){ return !it.obj; }).length;
+  $('#more').innerHTML = '<button class="btn ghost" data-act="all-items">查看全部条目（' + State.items.length + '）</button>' +
+    (bad ? '<div style="margin-top:10px"><button class="btn ghost" data-act="err-items">未解析的行（' + bad + '）</button></div>' : '');
+}
+
+function tagCardHTML(icon, title, sub, attr, hueKey){
+  var i = Cats.hue(String(hueKey));
+  return '<div class="cat" ' + attr + '>' +
+    '<div class="cat-ic" style="background:var(--c' + (i + 1) + ');color:var(--c' + (i + 1) + 'd)">' + esc(icon) + '</div>' +
+    '<div class="cat-main"><div class="cat-t">' + esc(title) + '</div>' +
+    '<div class="cat-m">' + sub + '</div></div>' +
+    '<div class="cat-arrow">›</div></div>';
+}
+
+function renderTags(){
+  $('#crumb').hidden = false;
+  var catTitle = State.cat === null ? '全部条目' : Cats.label(State.cat);
+  $('#crumb').innerHTML = '<button class="btn ghost" data-act="back-cats">‹ 分类</button>' +
+    '<div class="crumb-t">' + esc(catTitle) + '</div>';
+  $('#tagbar').hidden = true;
+
+  var list = catItems(State.cat);
+  var chars = 0, map = {}, order = [];
+  list.forEach(function(it){
+    var n = Jsonl.chars(it.obj);
+    chars += n;
+    var t = Cats.tag(it);
+    if (!t) return;
+    if (!map[t]){ map[t] = { n: 0, c: 0 }; order.push(t); }
+    map[t].n++; map[t].c += n;
+  });
+  var tagged = order.reduce(function(a, t){ return a + map[t].n; }, 0);
+  var untagged = list.length - tagged;
+
+  var html = tagCardHTML('全', '全部条目',
+    '<span class="num">' + list.length + ' 条</span><span>·</span><span>' + fmtChars(chars) + '</span>',
+    'data-tagwith="__all__"', State.cat === null ? '全部' : State.cat);
+
+  order.forEach(function(t){
+    html += tagCardHTML(Cats.mark(t), t,
+      '<span class="num">' + map[t].n + ' 条</span><span>·</span><span>' + fmtChars(map[t].c) + '</span>',
+      'data-tagwith="' + esc(t) + '"', t);
+  });
+
+  if (untagged > 0){
+    html += tagCardHTML('·', '未加标签',
+      '<span class="num">' + untagged + ' 条</span>',
+      'data-tagwith="__none__"', '未加标签');
+  }
+  if (!html) html = '<div class="empty">这个分类还没有条目</div>';
+  $('#list').innerHTML = html;
+  $('#more').innerHTML = '';
+  State.tagList = order;
+}
+
+function renderList(){
+  var key = State.cat, tag = State.tag;
+  var catTitle = key === null ? '全部条目' : Cats.label(key);
+  var tagTitle = tag === null ? catTitle : (tag === '' ? '未加标签' : tag);
+  $('#crumb').hidden = false;
+  $('#crumb').innerHTML = '<button class="btn ghost" data-act="back-tags">‹ ' + esc(catTitle.slice(0, 10)) + '</button>' +
+    '<div class="crumb-t">' + esc(tagTitle) + '</div>';
+  $('#tagbar').hidden = true;
+
+  var list = filteredItems();
+  var shown = list.slice(0, State.page * CONFIG.PAGE);
+  var html = shown.map(itemCardHTML).join('');
+  if (!html) html = '<div class="empty">没有匹配的条目</div>';
+  $('#list').innerHTML = html;
+  $('#more').innerHTML = list.length > shown.length
+    ? '<button class="btn ghost" data-act="more">加载更多（还有 ' + (list.length - shown.length) + ' 条）</button>'
+    : '';
+}
+
+function render(){
+  if (State.view === 'cats') renderCats();
+  else if (State.view === 'tags') renderTags();
+  else renderList();
+  renderStats();
+}
+
+/* ================= 编辑面板 ================= */
+function extraJSON(obj){
+  var o = {};
+  Object.keys(obj || {}).forEach(function(k){ if (k !== 'messages' && k !== 'id') o[k] = obj[k]; });
+  return Object.keys(o).length ? JSON.stringify(o, null, 2) : '';
+}
+
+function openEditor(id){
+  var it = State.items.filter(function(x){ return x.id === id; })[0];
+  if (!it) return;
+  State.editingId = id;
+  if (it.obj){
+    State.draft = JSON.parse(JSON.stringify(it.obj));
+    State.tagText = Cats.tag(it);
+    State.extraText = extraJSON(it.obj);
+    State.rawFix = ''; State.fixErr = '';
+  } else {
+    State.draft = null;
+    State.tagText = '';
+    State.extraText = '';
+    State.rawFix = it.raw;
+    State.fixErr = it.error;
+  }
+  $('#sheet-edit').hidden = false;
+  document.body.classList.add('lock');
+  renderEditor();
+  requestAnimationFrame(growAll);
+}
+
+function newItem(){
+  State.editingId = 'new';
+  var ms = [];
+  if (State.cat !== null && State.cat !== '') ms.push({ role: 'system', content: State.cat });
+  ms.push({ role: 'user', content: '' });
+  ms.push({ role: 'assistant', content: '' });
+  State.draft = { messages: ms };
+  State.tagText = (State.tag !== null && State.tag !== '') ? State.tag : '';
+  State.extraText = '';
+  State.rawFix = ''; State.fixErr = '';
+  $('#sheet-edit').hidden = false;
+  document.body.classList.add('lock');
+  renderEditor();
+  requestAnimationFrame(growAll);
+}
+
+function renderEditor(){
+  var isNew = State.editingId === 'new';
+  var it = State.items.filter(function(x){ return x.id === State.editingId; })[0];
+  var curNo = isNew ? '' : (it && it.obj ? Jsonl.normId(it.obj.id) : '');
+  $('#edit-title').textContent = isNew ? '新建条目'
+    : (curNo ? ('编辑 · ' + curNo) : ('编辑 #' + (it ? it.line : '')));
+  var body = $('#edit-body');
+
+  if (State.draft === null){
+    body.innerHTML = '<div class="sec"><div class="sec-t">原始 JSON</div>' +
+      '<div class="ierr">' + esc(State.fixErr || '') + '</div>' +
+      '<div class="hint">修好这一行后点保存，解析通过就会替换原条目。</div>' +
+      '<textarea id="rawfix" rows="12" spellcheck="false" style="margin-top:10px">' + esc(State.rawFix || '') + '</textarea></div>';
+    growAll();
+    return;
+  }
+
+  var ms = State.draft.messages || [];
+  var h = '<div class="sec"><div class="sec-t">编号</div>' +
+    '<input type="text" id="edit-id" spellcheck="false" placeholder="可选，数据里有 id 才填" value="' + esc(curNo) + '">' +
+    '<div class="hint">顶层 id 字段，只拿来当标题，不影响训练；留空就不写这个字段。</div></div>';
+  h += '<div class="sec"><div class="sec-t">消息（' + ms.length + '）· 第一条 system 决定归到哪个分类</div>';
+  ms.forEach(function(m, i){
+    h += '<div class="msg">' +
+      '<div class="msgbar">' +
+        '<select data-role="' + i + '">' +
+          ['user','assistant','system'].map(function(r){
+            return '<option value="' + r + '"' + (m.role === r ? ' selected' : '') + '>' + r + '</option>';
+          }).join('') +
+        '</select>' +
+        '<span class="len" data-len="' + i + '">' + String(m.content || '').length + ' 字</span>' +
+        '<button class="mini danger" data-act="del-msg" data-i="' + i + '">删除</button>' +
+      '</div>' +
+      '<textarea data-content="' + i + '" rows="4" spellcheck="false">' + esc(m.content || '') + '</textarea>' +
+    '</div>';
+  });
+  h += '<div class="rowbtns"><button class="btn ghost" data-act="add-msg" data-role="user">+ user</button>' +
+       '<button class="btn ghost" data-act="add-msg" data-role="assistant">+ assistant</button>' +
+       '<button class="btn ghost" data-act="add-msg" data-role="system">+ system</button></div></div>';
+  h += '<div class="sec"><div class="sec-t">子分类标签</div>' +
+       '<input type="text" id="subtag" placeholder="例如 早起 / 夜路" value="' + esc(State.tagText) + '">' +
+       '<div class="hint">存进 meta.sub。分类列表里会显示成标签，也能用它筛选同类素材。</div></div>';
+  h += '<div class="sec"><div class="sec-t">附加字段（JSON 对象，可留空）</div>' +
+       '<div class="hint">messages 以外的字段，例如 _src、meta，原样保留。</div>' +
+       '<textarea id="extra" rows="4" spellcheck="false" style="margin-top:8px">' + esc(State.extraText) + '</textarea></div>';
+  if (!isNew){
+    h += '<div class="sec"><button class="btn danger" data-act="delete-item">删除这一条</button></div>';
+  }
+  body.innerHTML = h;
+  growAll();
+}
+
+function saveEditing(){
+  if (State.draft === null){
+    var obj;
+    try { obj = JSON.parse(State.rawFix || ''); }
+    catch (e){ toast('JSON 仍不合法：' + e.message, false); return; }
+    var v0 = Jsonl.validate(obj);
+    if (!v0.ok){ toast(v0.errs[0], false); return; }
+    var rid = Jsonl.normId(obj.id);
+    if (rid && Jsonl.idExists(State.items, rid, State.editingId)){ toast('编号 ' + rid + ' 已被占用', false); return; }
+    Ops.update(State.editingId, obj);
+    closeSheet();
+    toast('已修复并保存');
+    return;
+  }
+  var ms = State.draft.messages.filter(function(m){ return m && String(m.content || '').trim() !== ''; });
+  if (!ms.length){ toast('至少保留一条非空消息', false); return; }
+  var extraText = (State.extraText || '').trim();
+  var extra = {};
+  if (extraText){
+    try { extra = JSON.parse(extraText); }
+    catch (e){ toast('附加字段不是合法 JSON', false); return; }
+    if (!extra || typeof extra !== 'object' || Array.isArray(extra)){ toast('附加字段必须是 JSON 对象', false); return; }
+  }
+  if (extra.id !== undefined) delete extra.id;
+  var idEl = $('#edit-id');
+  var wantId = Jsonl.normId(idEl ? idEl.value : '');
+  var exceptId = State.editingId === 'new' ? null : State.editingId;
+  if (wantId && Jsonl.idExists(State.items, wantId, exceptId)){
+    toast('编号 ' + wantId + ' 已被占用', false); return;
+  }
+  var obj2 = Object.assign({}, extra, { messages: ms });
+  if (wantId) obj2.id = wantId;
+  var tagEl = $('#subtag');
+  Cats.setTag(obj2, tagEl ? tagEl.value : State.tagText);
+  var v = Jsonl.validate(obj2);
+  if (!v.ok){ toast(v.errs[0], false); return; }
+  var editId = State.editingId;
+  if (editId === 'new') Ops.add(obj2);
+  else Ops.update(editId, obj2);
+  closeSheet();
+  toast('已保存');
+}
+
+function closeSheet(){
+  $('#sheet-edit').hidden = true;
+  $('#sheet-batch').hidden = true;
+  document.body.classList.remove('lock');
+  State.editingId = null;
+  State.draft = null;
+}
+
+/* ================= 导入导出 ================= */
+function importText(text){
+  var parsed = Jsonl.parse(text);
+  if (!parsed.length){ toast('文件里没有读到条目', false); return; }
+  if (State.items.length){
+    var replace = confirm('当前已有 ' + State.items.length + ' 条。\n确定 = 替换，取消 = 追加到末尾');
+    if (replace) State.items = parsed;
+    else State.items = State.items.concat(parsed);
+  } else {
+    State.items = parsed;
+  }
+  State.page = 1;
+  State.view = 'cats';
+  State.cat = null;
+  State.tag = '';
+  State.selected = {};
+  Persist.save(); render();
+  window.scrollTo(0, 0);
+  toast('已导入 ' + parsed.length + ' 条');
+}
+
+function exportText(){
+  var text = Jsonl.stringify(State.items);
+  if (!text.trim()){ toast('没有可保存的内容', false); return; }
+  if (window.JsGO && window.JsGO.saveBegin){
+    try {
+      pushText(text,
+        function(){ window.JsGO.saveBegin(); },
+        function(s){ window.JsGO.appendText(s); },
+        function(){ window.JsGO.saveCommit(); });
+    } catch (e){ toast('保存失败：' + e.message, false); }
+    return;
+  }
+  var blob = new Blob([text], { type: 'application/octet-stream' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'train.jsonl';
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+  toast('已生成 train.jsonl');
+}
+
+function doImport(){
+  if (window.JsGO && window.JsGO.openFile){
+    try { window.JsGO.openFile(); } catch (e){ toast('打开文件失败：' + e.message, false); }
+  } else {
+    $('#filepick').click();
+  }
+}
+
+window.JsGO_receive = function(text, action){
+  if (action === 'open'){
+    var t = text || pullOpen();
+    if (!t){ toast('文件为空或读取失败', false); return; }
+    importText(t);
+  } else if (action === 'save'){
+    toast('已保存到文件');
+  } else if (action === 'error'){
+    toast(text || '文件操作失败', false);
+  }
+};
+
+/* ================= 事件层 ================= */
+function handleAct(act, ds){
+  switch (act){
+    case 'import': doImport(); break;
+    case 'export': exportText(); break;
+    case 'new': newItem(); break;
+    case 'batch': $('#sheet-batch').hidden = false; document.body.classList.add('lock'); break;
+    case 'close-sheet': closeSheet(); break;
+    case 'save-item': saveEditing(); break;
+    case 'back-cats':
+      State.view = 'cats'; State.cat = null; State.tag = null; State.page = 1;
+      render(); window.scrollTo(0, 0);
+      break;
+    case 'back-tags':
+      State.view = 'tags'; State.tag = null; State.page = 1;
+      render(); window.scrollTo(0, 0);
+      break;
+    case 'all-items':
+      State.view = 'items'; State.cat = null; State.tag = null; State.page = 1;
+      render(); window.scrollTo(0, 0);
+      break;
+    case 'err-items':
+      State.view = 'items'; State.cat = null; State.tag = null; State.page = 1;
+      State.onlyErr = true; $('#onlyErr').checked = true;
+      render(); window.scrollTo(0, 0);
+      break;
+    case 'more': State.page++; renderList(); break;
+    case 'delete-item':
+      if (State.editingId && State.editingId !== 'new'){
+        if (confirm('确定删除这一条？')){
+          Ops.remove(State.editingId);
+          closeSheet();
+          toast('已删除');
+        }
+      }
+      break;
+    case 'add-msg':
+      if (ds.role === 'system') State.draft.messages.unshift({ role: 'system', content: '' });
+      else State.draft.messages.push({ role: ds.role || 'user', content: '' });
+      renderEditor();
+      requestAnimationFrame(function(){
+        var ts = $$('#edit-body textarea[data-content]');
+        if (ts.length){
+          ts[ts.length - 1].focus();
+          autoGrow(ts[ts.length - 1]);
+        }
+      });
+      break;
+    case 'del-msg':
+      State.draft.messages.splice(parseInt(ds.i, 10), 1);
+      if (!State.draft.messages.length) State.draft.messages.push({ role: 'user', content: '' });
+      renderEditor();
+      requestAnimationFrame(growAll);
+      break;
+    case 'run':
+      if (ds.op === 'replace') Batch.replace();
+      else if (ds.op === 'rewrite') Batch.rewrite();
+      else if (ds.op === 'tag') Batch.tag();
+      else if (ds.op === 'trim') Batch.trim();
+      else if (ds.op === 'dedupe') Batch.dedupe();
+      else if (ds.op === 'remove') Batch.remove();
+      break;
+    case 'undo': undo(); break;
+  }
+}
+
+document.addEventListener('click', function(e){
+  var t = e.target;
+  if (!t.closest) return;
+
+  var catEl = t.closest('[data-cat]');
+  if (catEl){
+    var idx = parseInt(catEl.getAttribute('data-cat'), 10);
+    var c = State.catsCache[idx];
+    if (c){
+      State.view = 'tags';
+      State.cat = c.key;
+      State.tag = null;
+      State.page = 1;
+      render();
+      window.scrollTo(0, 0);
+    }
+    return;
+  }
+
+  var tagw = t.closest('[data-tagwith]');
+  if (tagw){
+    var v = tagw.getAttribute('data-tagwith');
+    State.tag = v === '__all__' ? null : (v === '__none__' ? '' : v);
+    State.view = 'items';
+    State.page = 1;
+    render();
+    window.scrollTo(0, 0);
+    return;
+  }
+
+  var open = t.closest('[data-open]');
+  if (open){ openEditor(open.getAttribute('data-open')); return; }
+
+  var act = t.closest('[data-act]');
+  if (act){ handleAct(act.getAttribute('data-act'), act.dataset || {}); }
+});
+
+document.addEventListener('change', function(e){
+  var t = e.target;
+  if (t.matches && t.matches('[data-sel]')){
+    var id = t.getAttribute('data-sel');
+    if (t.checked) State.selected[id] = true;
+    else delete State.selected[id];
+    var card = t.closest('.item');
+    if (card) card.classList.toggle('sel', t.checked);
+    renderStats();
+  }
+});
+
+$('#edit-body').addEventListener('input', function(e){
+  var t = e.target;
+  if (t.matches('[data-content]')){
+    var i = parseInt(t.getAttribute('data-content'), 10);
+    State.draft.messages[i].content = t.value;
+    var lenEl = $('[data-len="' + i + '"]');
+    if (lenEl) lenEl.textContent = t.value.length + ' 字';
+    autoGrow(t);
+  } else if (t.id === 'extra'){
+    State.extraText = t.value;
+  } else if (t.id === 'rawfix'){
+    State.rawFix = t.value;
+    autoGrow(t);
+  } else if (t.id === 'subtag'){
+    State.tagText = t.value;
+  }
+});
+
+$('#edit-body').addEventListener('change', function(e){
+  var t = e.target;
+  if (t.matches('[data-role]')){
+    var i = parseInt(t.getAttribute('data-role'), 10);
+    State.draft.messages[i].role = t.value;
+    renderEditor();
+    requestAnimationFrame(growAll);
+  }
+});
+
+$('#q').addEventListener('input', debounce(function(){
+  State.query = $('#q').value.trim().toLowerCase();
+  State.page = 1;
+  render();
+}, 150));
+
+$('#onlyErr').addEventListener('change', function(){
+  State.onlyErr = $('#onlyErr').checked;
+  State.page = 1;
+  render();
+});
+
+$('#filepick').addEventListener('change', function(){
+  var f = this.files && this.files[0];
+  if (!f) return;
+  var reader = new FileReader();
+  reader.onload = function(){ importText(String(reader.result || '')); };
+  reader.readAsText(f, 'utf-8');
+  this.value = '';
+});
+
+window.__back = function(){
+  if (!$('#sheet-edit').hidden){ closeSheet(); return true; }
+  if (!$('#sheet-batch').hidden){ closeSheet(); return true; }
+  if (State.view === 'items'){
+    if (State.cat === null){ State.view = 'cats'; State.tag = null; }
+    else { State.view = 'tags'; State.tag = null; }
+    State.page = 1;
+    render(); window.scrollTo(0, 0);
+    return true;
+  }
+  if (State.view === 'tags'){
+    State.view = 'cats'; State.cat = null; State.tag = null; State.page = 1;
+    render(); window.scrollTo(0, 0);
+    return true;
+  }
+  return false;
+};
+
+/* ================= 启动 ================= */
+function boot(){
+  var saved = null;
+  if (!(window.JsGO && window.JsGO.storeLength)){
+    try { saved = localStorage.getItem('jsgo_workspace'); } catch (e) {}
+    if (saved){
+      try { var arr = JSON.parse(saved); if (Array.isArray(arr)) State.items = arr; } catch (e) {}
+    }
+  }
+  render();
+  if (window.JsGO && window.JsGO.storeLength){
+    var t = pullStore();
+    if (t){
+      try {
+        var arr2 = JSON.parse(t);
+        if (Array.isArray(arr2)){ State.items = arr2; render(); }
+      } catch (e) {}
+    }
+  }
+}
+
+boot();
+
+})();
+</script>
+</body>
+</html>
